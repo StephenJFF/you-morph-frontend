@@ -1,36 +1,100 @@
-# YouMorph Fitness: The Visual Weight Loss Possibility Engine
+# YouMorph Frontend
 
-YouMorph Fitness (formerly ShapeShift AI) transforms abstract weight loss data into motivating, stylized 3D visualizations. By showing users not just where they are, but a realistic "12-week goal" and an "ideal soft cap" based on their unique bone structure, we bridge the gap between effort and expectation.
+Modern fitness platform frontend built with Next.js, React, and TypeScript.
 
 ## Features
 
-- **3D Avatar Visualizer**: Real-time morphing of your personal 3D avatar based on measurements.
-- **Paper Towel Effect Visualization**: A powerful psychological boost showing how the last 10 lbs are more impactful than the first 30.
-- **Weekly Measurement Tracking**: Log weight and body circumferences to see your trend in 3D.
-- **Frame Calibration**: Personalized "Soft Cap" calculations based on your height and bone structure.
-- **Premium Tier**: Access to advanced features like Ghost Outlines and Anatomical Heat Maps.
-- **Coach Dashboard**: Multi-client dashboard for fitness professionals.
+- 🏠 Landing page with feature showcase
+- 📝 User authentication (signup/login)
+- 💪 Personalized fitness programs
+- 📊 Progress tracking dashboard
+- 🎯 Program filtering and discovery
+- 📱 Mobile-responsive design
+- 🎨 Modern UI with Tailwind CSS
 
 ## Tech Stack
 
-- **Frontend**: React, Three.js, React Three Fiber, Tailwind CSS
-- **State Management**: Zustand
-- **Charts**: Recharts
-- **Icons**: Lucide React
+- **Framework**: Next.js 14
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS
+- **State Management**: React Hooks
+- **HTTP Client**: Axios
+- **Authentication**: JWT (localStorage)
 
-## Development
+## Getting Started
 
-1. Install dependencies:
-   ```bash
-   pnpm install
-   ```
+### Prerequisites
 
-2. Run the development server:
-   ```bash
-   pnpm dev
-   ```
+- Node.js 18+
+- npm or yarn
 
-3. Build for production:
-   ```bash
-   pnpm build
-   ```
+### Installation
+
+```bash
+npm install
+```
+
+### Development
+
+```bash
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) to view in browser.
+
+### Build
+
+```bash
+npm run build
+npm start
+```
+
+## Project Structure
+
+```
+app/
+  ├── layout.tsx          # Root layout with header/footer
+  ├── page.tsx            # Landing page
+  ├── globals.css         # Global styles
+  ├── signup/page.tsx     # Signup page
+  ├── login/page.tsx      # Login page
+  ├── programs/page.tsx   # Programs listing
+  └── dashboard/page.tsx  # User dashboard
+
+components/
+  ├── Header.tsx          # Navigation header
+  ├── Footer.tsx          # Footer component
+  └── ProgramCard.tsx     # Program display card
+
+lib/
+  ├── api.ts              # Axios API client
+  └── auth.ts             # Auth utilities
+
+public/                    # Static assets
+```
+
+## Environment Variables
+
+Create a `.env.local` file:
+
+```
+NEXT_PUBLIC_API_URL=http://localhost:3001
+```
+
+## Pages
+
+- `/` - Landing page
+- `/programs` - Browse fitness programs
+- `/signup` - Create new account
+- `/login` - Login to existing account
+- `/dashboard` - User dashboard (requires authentication)
+
+## Contributing
+
+1. Create a feature branch
+2. Make your changes
+3. Submit a pull request
+
+## License
+
+MIT
