@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, Navigate } from 'react-router-dom';
+import { Analytics } from '@vercel/analytics/react';
 import Dashboard from './pages/Dashboard';
 import Measurements from './pages/Measurements';
 import Progress from './pages/Progress';
@@ -98,6 +99,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
+        <Analytics />
       </Router>
     );
   }
@@ -117,6 +119,7 @@ function App() {
           </Routes>
         </main>
       </div>
+      <Analytics />
     </Router>
   );
 }
