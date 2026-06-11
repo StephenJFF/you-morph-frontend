@@ -61,7 +61,7 @@ interface EngineState {
   getVisualImpact: () => number;
 }
 
-const API_BASE = 'http://localhost:3000';
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 export const useEngineStore = create<EngineState>((set, get) => ({
   userId: 'e583ebba-7f19-4984-a055-3e6a132f0f7a', // Default test user
