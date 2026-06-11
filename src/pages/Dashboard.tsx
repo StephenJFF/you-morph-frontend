@@ -1,312 +1,189 @@
-import AvatarScene from '../components/3d/Avatar';
-import { useEngineStore } from '../store/engineStore';
-import { Ghost, Flame, Info, Columns, Calendar, Lock, Star } from 'lucide-react';
-import { calculateSoftCap, kgToLbs } from '../utils/logic';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import PremiumOverlay from '../components/PremiumOverlay';
+import { TrendingUp, Plus, AlertCircle } from 'lucide-react';
+
+interface CheckIn {
+  id: string;
+  weight: number;
+  date: string;
+  notes?: string;
+}
 
 const Dashboard = () => {
-  const { 
-    influences, setInfluences, stats, setStats, 
-    viewMode, setViewMode, showGhost, toggleGhost, 
-    getVisualImpact, splitView, toggleSplitView,
-    invitations, respondToInvitation, subscriptionStatus
-  } = useEngineStore();
+  const navigate = useNavigate();
+  const [checkIns, setCheckIns] = useState<CheckIn[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [weight, setWeight] = useState('');
+  const [notes, setNotes] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
-  const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
+  useEffect(() => {
+    fetchCheckIns();
+  }, []);
 
-  const handleToggleGhost = () => {
-    if (subscriptionStatus === 'premium') {
-      toggleGhost();
-    } else {
-      setShowUpgradePrompt(true);
+  const fetchCheckIns = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        navigate('/login');
+        return;
+      }
+
+      const response = await fetch('http://localhost:3001/api/checkins', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!response.ok) throw new Error('Failed to fetch');
+      const data = await response.json();
+      setCheckIns(data);
+    } catch (err) {
+      setError('Failed to load check-ins');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleToggleHeatMap = () => {
-    if (subscriptionStatus === 'premium') {
-      setViewMode(viewMode === 'heat-map' ? 'standard' : 'heat-map');
-    } else {
-      setShowUpgradePrompt(true);
+  const handleAddCheckIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:3001/api/checkins', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          weight: parseFloat(weight),
+          notes,
+        }),
+      });
+
+      if (!response.ok) throw new Error('Failed to add check-in');
+      const newCheckIn = await response.json();
+      setCheckIns([newCheckIn, ...checkIns]);
+      setWeight('');
+      setNotes('');
+    } catch (err) {
+      setError('Failed to add check-in');
+    } finally {
+      setSubmitting(false);
     }
   };
-
-  const handleInfluenceChange = (key: keyof typeof influences, value: number) => {
-    setInfluences({ [key]: value });
-  };
-
-  const handleWeightChange = (lbs: number) => {
-    // Basic lbs to kg for the engine logic
-    const kg = lbs / 2.20462;
-    setStats({ currentWeightKg: kg });
-  };
-
-  const softCapKg = calculateSoftCap(stats.heightCm, stats.wristCm, stats.gender);
-  const softCapLbs = Math.round(kgToLbs(softCapKg));
-  const currentWeightLbs = Math.round(kgToLbs(stats.currentWeightKg));
-  const goalWeightLbs = Math.round(kgToLbs(stats.goalWeightKg));
-  const impactScore = getVisualImpact();
-
-  // 12-week prediction: roughly 0.5kg/week
-  const predictedWeightKg = Math.max(stats.goalWeightKg, stats.currentWeightKg - 6);
-  const predictedWeightLbs = Math.round(kgToLbs(predictedWeightKg));
 
   return (
-    <div className="p-8">
-      <div className="flex justify-between items-end mb-6">
-        <div>
-          <div className="flex items-center space-x-3 mb-1">
-            <h1 className="text-3xl font-bold">Dashboard</h1>
-            {subscriptionStatus === 'premium' && (
-              <span className="bg-gradient-to-r from-amber-400 to-orange-500 text-slate-900 text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-tighter shadow-sm flex items-center space-x-1">
-                <Star size={10} fill="currentColor" />
-                <span>Premium Member</span>
-              </span>
-            )}
-          </div>
-          <p className="text-gray-500">Visualizing your progress in 3D using the Paper Towel Effect.</p>
-        </div>
-        <div className="flex space-x-2">
-          <button 
-            onClick={toggleSplitView}
-            className={`flex items-center space-x-2 px-4 py-2 rounded-lg border transition ${splitView ? 'bg-blue-600 border-blue-600 text-white' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'}`}
-          >
-            <Columns size={18} />
-            <span className="text-sm font-medium">Split View</span>
-          </button>
-          <button 
-            onClick={handleToggleGhost}
-            className={`flex items-center space-x-2 px-4 py-2 rounded-lg border transition ${showGhost ? 'bg-blue-100 border-blue-300 text-blue-700' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'} ${subscriptionStatus === 'free' ? 'opacity-70' : ''}`}
-          >
-            <Ghost size={18} />
-            <span className="text-sm font-medium">Ghost Outline</span>
-            {subscriptionStatus === 'free' && <Lock size={12} className="ml-1 text-slate-400" />}
-          </button>
-          <button 
-            onClick={handleToggleHeatMap}
-            className={`flex items-center space-x-2 px-4 py-2 rounded-lg border transition ${viewMode === 'heat-map' ? 'bg-orange-100 border-orange-300 text-orange-700' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'} ${subscriptionStatus === 'free' ? 'opacity-70' : ''}`}
-          >
-            <Flame size={18} />
-            <span className="text-sm font-medium">Heat Map</span>
-            {subscriptionStatus === 'free' && <Lock size={12} className="ml-1 text-slate-400" />}
-          </button>
-        </div>
+    <div className="p-8 max-w-6xl mx-auto">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">Dashboard</h1>
+        <p className="text-gray-600">Track your fitness progress</p>
       </div>
+
+      {error && (
+        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2">
+          <AlertCircle size={20} className="text-red-600" />
+          <span className="text-red-600">{error}</span>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-8">
-          <div className="bg-white p-6 rounded-xl shadow-md border border-slate-200 relative overflow-hidden">
-            <h2 className="text-xl font-semibold mb-4">Visual Progress</h2>
-            <div className="relative">
-              <AvatarScene />
-              {showUpgradePrompt && subscriptionStatus === 'free' && (
-                <PremiumOverlay feature="Ghost & Heat Map" />
-              )}
-            </div>
-            
-            {/* Visual Impact Score Overlay */}
-            <div className="absolute top-20 right-10 bg-white/80 backdrop-blur-sm p-3 rounded-lg border border-slate-200 shadow-sm">
-              <div className="flex items-center space-x-2 mb-1">
-                <span className="text-[10px] uppercase tracking-wider font-bold text-slate-500">Visual Impact Score</span>
-                <Info size={12} className="text-slate-400" />
-              </div>
-              <div className="text-2xl font-black text-blue-600">{impactScore}</div>
-              <div className="w-24 h-1 bg-slate-200 rounded-full mt-1 overflow-hidden">
-                <div className="h-full bg-blue-500" style={{ width: `${impactScore}%` }}></div>
-              </div>
-            </div>
+          <div className="bg-white rounded-lg shadow p-6">
+            <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <Plus size={20} />
+              Add Check-in
+            </h2>
 
-            <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
+            <form onSubmit={handleAddCheckIn} className="space-y-4">
               <div>
-                <div className="flex justify-between mb-1">
-                  <label className="text-sm font-medium text-gray-700">Weight Simulator (lbs)</label>
-                  <span className="text-xs text-gray-500">{currentWeightLbs} lbs</span>
-                </div>
-                <input 
-                  type="range" min={goalWeightLbs - 10} max={Math.round(kgToLbs(stats.startWeightKg))} step="1" 
-                  value={currentWeightLbs}
-                  onChange={(e) => handleWeightChange(parseInt(e.target.value))}
-                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600" 
-                />
-                <p className="text-[10px] text-gray-400 mt-1">Driving visual morph intensity: {Math.round(influences.weight * 100)}%</p>
-              </div>
-
-              <div>
-                <div className="flex justify-between mb-1">
-                  <label className="text-sm font-medium text-gray-700">Waist (Local Morph)</label>
-                  <span className="text-xs text-gray-500">{Math.round(influences.waist * 100)}%</span>
-                </div>
-                <input 
-                  type="range" min="0" max="1" step="0.01" value={influences.waist}
-                  onChange={(e) => handleInfluenceChange('waist', parseFloat(e.target.value))}
-                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600" 
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Weight (kg)
+                </label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={weight}
+                  onChange={(e) => setWeight(e.target.value)}
+                  required
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="75.5"
                 />
               </div>
 
               <div>
-                <div className="flex justify-between mb-1">
-                  <label className="text-sm font-medium text-gray-700">Hips (Local Morph)</label>
-                  <span className="text-xs text-gray-500">{Math.round(influences.hips * 100)}%</span>
-                </div>
-                <input 
-                  type="range" min="0" max="1" step="0.01" value={influences.hips}
-                  onChange={(e) => handleInfluenceChange('hips', parseFloat(e.target.value))}
-                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600" 
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Notes (optional)
+                </label>
+                <textarea
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="How did you feel today?"
+                  rows={3}
                 />
               </div>
 
-              <div>
-                <div className="flex justify-between mb-1">
-                  <label className="text-sm font-medium text-gray-700">Chest (Local Morph)</label>
-                  <span className="text-xs text-gray-500">{Math.round(influences.chest * 100)}%</span>
-                </div>
-                <input 
-                  type="range" min="0" max="1" step="0.01" value={influences.chest}
-                  onChange={(e) => handleInfluenceChange('chest', parseFloat(e.target.value))}
-                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600" 
-                />
-              </div>
-
-              <div>
-                <div className="flex justify-between mb-1">
-                  <label className="text-sm font-medium text-gray-700">Arms (Local Morph)</label>
-                  <span className="text-xs text-gray-500">{Math.round(influences.arm * 100)}%</span>
-                </div>
-                <input 
-                  type="range" min="0" max="1" step="0.01" value={influences.arm}
-                  onChange={(e) => handleInfluenceChange('arm', parseFloat(e.target.value))}
-                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600" 
-                />
-              </div>
-
-              <div>
-                <div className="flex justify-between mb-1">
-                  <label className="text-sm font-medium text-gray-700">Thighs (Local Morph)</label>
-                  <span className="text-xs text-gray-500">{Math.round(influences.thigh * 100)}%</span>
-                </div>
-                <input 
-                  type="range" min="0" max="1" step="0.01" value={influences.thigh}
-                  onChange={(e) => handleInfluenceChange('thigh', parseFloat(e.target.value))}
-                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600" 
-                />
-              </div>
-
-              <div>
-                <div className="flex justify-between mb-1">
-                  <label className="text-sm font-medium text-gray-700">Shoulder Width (Frame)</label>
-                  <span className="text-xs text-gray-500">{Math.round(influences.shoulder * 100)}%</span>
-                </div>
-                <input 
-                  type="range" min="0" max="1" step="0.01" value={influences.shoulder}
-                  onChange={(e) => handleInfluenceChange('shoulder', parseFloat(e.target.value))}
-                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-purple-600" 
-                />
-              </div>
-
-              <div>
-                <div className="flex justify-between mb-1">
-                  <label className="text-sm font-medium text-gray-700">Wrist Thickness (Frame)</label>
-                  <span className="text-xs text-gray-500">{Math.round(influences.wrist * 100)}%</span>
-                </div>
-                <input 
-                  type="range" min="0" max="1" step="0.01" value={influences.wrist}
-                  onChange={(e) => handleInfluenceChange('wrist', parseFloat(e.target.value))}
-                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-purple-600" 
-                />
-              </div>
-
-              <div>
-                <div className="flex justify-between mb-1">
-                  <label className="text-sm font-medium text-gray-700">Ankle Thickness (Frame)</label>
-                  <span className="text-xs text-gray-500">{Math.round(influences.ankle * 100)}%</span>
-                </div>
-                <input 
-                  type="range" min="0" max="1" step="0.01" value={influences.ankle}
-                  onChange={(e) => handleInfluenceChange('ankle', parseFloat(e.target.value))}
-                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-purple-600" 
-                />
-              </div>
-            </div>
+              <button
+                type="submit"
+                disabled={submitting}
+                className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold py-2 rounded-lg transition"
+              >
+                {submitting ? 'Saving...' : 'Save Check-in'}
+              </button>
+            </form>
           </div>
-        </div>
 
-        <div className="space-y-8">
-          {invitations.length > 0 && (
-            <div className="bg-purple-50 p-6 rounded-xl shadow-md border border-purple-200">
-              <h2 className="text-xl font-semibold mb-4 text-purple-900 flex items-center space-x-2">
-                <Info size={20} />
-                <span>Coach Invitations</span>
-              </h2>
-              <div className="space-y-4">
-                {invitations.map((inv) => (
-                  <div key={inv.id} className="bg-white p-4 rounded-lg border border-purple-100 flex items-center justify-between">
+          <div className="bg-white rounded-lg shadow p-6">
+            <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <TrendingUp size={20} />
+              Recent Check-ins
+            </h2>
+
+            {loading ? (
+              <div className="text-center py-8 text-gray-500">Loading...</div>
+            ) : checkIns.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">No check-ins yet</div>
+            ) : (
+              <div className="space-y-2">
+                {checkIns.map((checkIn) => (
+                  <div key={checkIn.id} className="p-4 bg-gray-50 rounded-lg flex justify-between items-start">
                     <div>
-                      <div className="font-bold text-purple-900">{inv.coach_name || 'Coach'}</div>
-                      <div className="text-xs text-purple-600">Would like to manage your profile</div>
-                    </div>
-                    <div className="flex space-x-2">
-                      <button 
-                        onClick={() => respondToInvitation(inv.id, 'active')}
-                        className="bg-purple-600 text-white text-xs px-3 py-1.5 rounded-lg font-bold hover:bg-purple-700 transition"
-                      >
-                        Accept
-                      </button>
-                      <button 
-                        onClick={() => respondToInvitation(inv.id, 'terminated')}
-                        className="bg-white text-slate-500 text-xs px-3 py-1.5 rounded-lg font-bold border border-slate-200 hover:bg-slate-50 transition"
-                      >
-                        Decline
-                      </button>
+                      <p className="font-semibold text-gray-900">{checkIn.weight} kg</p>
+                      <p className="text-sm text-gray-600">{new Date(checkIn.date).toLocaleDateString()}</p>
+                      {checkIn.notes && <p className="text-sm text-gray-500 mt-1">{checkIn.notes}</p>}
                     </div>
                   </div>
                 ))}
               </div>
-            </div>
-          )}
-
-          <div className="bg-white p-6 rounded-xl shadow-md border border-slate-200">
-            <h2 className="text-xl font-semibold mb-4">Goal Tracker</h2>
-            <div className="space-y-4">
-              <div className="flex justify-between items-center border-b pb-2">
-                <span className="text-gray-600 font-medium">Current Weight</span>
-                <span className="font-bold text-lg">{currentWeightLbs} lbs</span>
-              </div>
-              <div className="flex justify-between items-center border-b pb-2">
-                <span className="text-gray-600 font-medium">Goal Weight</span>
-                <span className="font-bold text-lg text-green-600">{goalWeightLbs} lbs</span>
-              </div>
-              <div className="flex justify-between items-center border-b pb-2">
-                <span className="text-gray-600 font-medium">Ideal Soft Cap</span>
-                <span className="font-bold text-lg text-blue-600">{softCapLbs} lbs</span>
-              </div>
-              
-              <div className="mt-8 p-4 bg-blue-50 rounded-lg border border-blue-100">
-                <h3 className="font-semibold text-blue-800 mb-2">Paper Towel Effect</h3>
-                <p className="text-sm text-blue-700 leading-relaxed">
-                  As you get leaner, each pound lost is more visually impactful. 
-                  <span className="block mt-2 font-bold italic">"The last 10 lbs look like the first 30."</span>
-                </p>
-              </div>
-            </div>
+            )}
           </div>
+        </div>
 
-          <div className="bg-slate-900 p-6 rounded-xl shadow-md text-white border border-slate-700">
-            <h2 className="text-xl font-semibold mb-4 text-blue-400">Frame Calibration</h2>
-            <div className="space-y-3">
-              <div className="flex justify-between text-sm">
-                <span className="text-slate-400">Height</span>
-                <span>{stats.heightCm} cm</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-slate-400">Wrist</span>
-                <span>{stats.wristCm} cm</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-slate-400">Calculated Frame</span>
-                <span className="font-bold text-blue-300">{calculateSoftCap(stats.heightCm, stats.wristCm, stats.gender) > 0 ? 'Verified' : ''}</span>
-              </div>
+        <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg shadow p-6 h-fit">
+          <h3 className="font-bold text-gray-900 mb-4">Quick Stats</h3>
+          <div className="space-y-3">
+            <div>
+              <p className="text-gray-600 text-sm">Total Check-ins</p>
+              <p className="text-2xl font-bold text-blue-600">{checkIns.length}</p>
             </div>
+            {checkIns.length > 0 && (
+              <>
+                <div>
+                  <p className="text-gray-600 text-sm">Latest Weight</p>
+                  <p className="text-2xl font-bold text-gray-900">{checkIns[0].weight} kg</p>
+                </div>
+                {checkIns.length > 1 && (
+                  <div>
+                    <p className="text-gray-600 text-sm">Change</p>
+                    <p className={`text-2xl font-bold ${checkIns[0].weight < checkIns[checkIns.length - 1].weight ? 'text-green-600' : 'text-red-600'}`}>
+                      {(checkIns[0].weight - checkIns[checkIns.length - 1].weight).toFixed(1)} kg
+                    </p>
+                  </div>
+                )}
+              </>
+            )}
           </div>
         </div>
       </div>
