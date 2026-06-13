@@ -15,6 +15,7 @@ const Measurements = () => {
     shoulderInches: '',
     wristInches: '',
     ankleInches: '',
+    inseamInches: '',
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -34,6 +35,7 @@ const Measurements = () => {
       shoulder: parseFloat(formData.shoulderInches) * 2.54 / 60,
       wrist: parseFloat(formData.wristInches) * 2.54 / 25,
       ankle: parseFloat(formData.ankleInches) * 2.54 / 35,
+      inseam: parseFloat(formData.inseamInches) * 2.54 / 120,
     });
 
     setSaved(true);
@@ -120,6 +122,13 @@ const Measurements = () => {
                 <input 
                   type="number" name="ankleInches" value={formData.ankleInches} onChange={handleChange}
                   className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" placeholder="9" 
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Inseam (inches)</label>
+                <input 
+                  type="number" name="inseamInches" value={formData.inseamInches} onChange={handleChange}
+                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2" placeholder="32" 
                 />
               </div>
             </div>

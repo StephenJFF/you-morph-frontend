@@ -225,6 +225,7 @@ export const useEngineStore = create<EngineState>((set, get) => ({
       if (data.shoulder !== undefined) userUpdate.shoulder_cm = data.shoulder * 60;
       if (data.wrist !== undefined) userUpdate.wrist_cm = data.wrist * 25;
       if (data.ankle !== undefined) userUpdate.ankle_cm = data.ankle * 35;
+      if (data.inseam !== undefined) userUpdate.inseam_cm = data.inseam * 120;
       
       if (Object.keys(userUpdate).length > 0) {
         await fetch(`${API_BASE}/users/${userId}`, {

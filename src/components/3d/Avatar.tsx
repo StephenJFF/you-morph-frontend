@@ -57,10 +57,12 @@ const AvatarMesh = ({ position = [0, 0, 0] as [number, number, number], isGhost 
         const count = geo.attributes.position.count;
         const deltas = new Float32Array(count);
         
-        // Use the weight_down morph target (index 3) to simulate "heat"
         const morphTargets = (geo as any).morphAttributes?.position;
-        if (morphTargets && morphTargets[3]) {
-          const weightDownDelta = morphTargets[3].array;
+        const dict = (bodyMesh as any).morphTargetDictionary;
+        const weightDownIndex = dict ? dict['weight_down'] : 3;
+
+        if (morphTargets && morphTargets[weightDownIndex]) {
+          const weightDownDelta = morphTargets[weightDownIndex].array;
           for (let i = 0; i < count; i++) {
             const dx = weightDownDelta[i * 3];
             const dy = weightDownDelta[i * 3 + 1];
@@ -70,6 +72,7 @@ const AvatarMesh = ({ position = [0, 0, 0] as [number, number, number], isGhost 
         }
         geo.setAttribute('aDelta', new THREE.BufferAttribute(deltas, 1));
       }
+
     }
   }, [bodyMesh]);
 
