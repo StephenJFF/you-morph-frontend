@@ -1,6 +1,6 @@
 import { Canvas, useFrame } from '@react-three/fiber';
 import { OrbitControls, Stage, useGLTF } from '@react-three/drei';
-import { Suspense, useRef, useEffect, useMemo } from 'react';
+import { Suspense, useEffect, useMemo } from 'react';
 import { useEngineStore } from '../../store/engineStore';
 import * as THREE from 'three';
 import { GhostShader } from './shaders/GhostShader';
@@ -25,7 +25,7 @@ const AvatarMesh = ({ position = [0, 0, 0] as [number, number, number], isGhost 
       }
     });
     return mesh;
-  }, [clonedScene]);
+  }, [clonedScene]) as THREE.Mesh | null;
 
   const ghostMaterial = useMemo(() => new THREE.ShaderMaterial({
     ...GhostShader,
@@ -118,6 +118,7 @@ const AvatarMesh = ({ position = [0, 0, 0] as [number, number, number], isGhost 
         applyMorph('shoulder_width', influences.shoulder);
         applyMorph('wrist_girth', influences.wrist);
         applyMorph('ankle_girth', influences.ankle);
+        applyMorph('inseam', influences.inseam);
         
         const heightDelta = (stats.heightCm - 180) / 36; 
         if (heightDelta > 0 && dict['height_up'] !== undefined) {

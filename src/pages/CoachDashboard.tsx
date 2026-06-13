@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { 
-  Users, UserPlus, Shield, ExternalLink, ArrowRight, 
-  Save, Info, Columns, Ghost, Flame, Lock, Star 
+  Users, UserPlus, Shield, ArrowRight, 
+  Save, Info, Columns, Ghost, Flame, Lock 
 } from 'lucide-react';
 import AvatarScene from '../components/3d/Avatar';
 import { useEngineStore } from '../store/engineStore';
@@ -23,7 +23,7 @@ const CoachDashboard = () => {
   const [inviteEmail, setInviteEmail] = useState('');
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
   const { 
-    setStats, isConsultationMode, setConsultationMode, 
+    isConsultationMode, setConsultationMode, 
     influences, setInfluences, splitView, toggleSplitView, 
     setUserId, inviteClient, updateClientPermissions,
     fetchCheckins, fetchUser, subscriptionStatus,
@@ -164,7 +164,11 @@ const CoachDashboard = () => {
                   <div>
                     <h2 className="text-2xl font-bold text-gray-900">{selectedClient.name}</h2>
                     <div className="flex items-center space-x-4 mt-1 text-sm text-slate-500">
-                      <span>Progress: <span className="text-blue-600 font-bold">{Math.round(((selectedClient.startWeight - selectedClient.currentWeight) / (selectedClient.startWeight - selectedClient.goalWeight)) * 100) || 0}%</span></span>
+                      <span>Progress: <span className="text-blue-600 font-bold">{
+                        (selectedClient.startWeight && selectedClient.currentWeight && selectedClient.goalWeight) 
+                          ? Math.round(((selectedClient.startWeight - selectedClient.currentWeight) / (selectedClient.startWeight - selectedClient.goalWeight)) * 100) 
+                          : 0
+                      }%</span></span>
                       <span className="text-slate-200">•</span>
                       <span>Goal: <span className="text-green-600 font-bold">{selectedClient.goalWeight || '-'} lbs</span></span>
                     </div>

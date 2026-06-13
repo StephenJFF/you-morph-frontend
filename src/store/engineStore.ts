@@ -12,6 +12,7 @@ interface Influences {
   shoulder: number;
   wrist: number;
   ankle: number;
+  inseam: number;
 }
 
 interface UserStats {
@@ -20,6 +21,7 @@ interface UserStats {
   wristCm: number;
   shoulderCm: number;
   ankleCm: number;
+  inseamCm: number;
   startWeightKg: number;
   currentWeightKg: number;
   goalWeightKg: number;
@@ -65,6 +67,8 @@ const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 export const useEngineStore = create<EngineState>((set, get) => ({
   userId: 'e583ebba-7f19-4984-a055-3e6a132f0f7a', // Default test user
+  userName: null,
+  userRole: null,
   checkins: [],
   clients: [],
   invitations: [],
@@ -79,6 +83,7 @@ export const useEngineStore = create<EngineState>((set, get) => ({
     shoulder: 0.5,
     wrist: 0.5,
     ankle: 0.5,
+    inseam: 0.5,
   },
   stats: {
     gender: 'male',
@@ -86,6 +91,7 @@ export const useEngineStore = create<EngineState>((set, get) => ({
     wristCm: 17.5,
     shoulderCm: 45,
     ankleCm: 22,
+    inseamCm: 80,
     startWeightKg: 95,
     currentWeightKg: 85,
     goalWeightKg: 75,
@@ -200,6 +206,7 @@ export const useEngineStore = create<EngineState>((set, get) => ({
               shoulder: latest.shoulder_cm ? latest.shoulder_cm / 60 : 0.5,
               wrist: latest.wrist_cm ? latest.wrist_cm / 25 : 0.5,
               ankle: latest.ankle_cm ? latest.ankle_cm / 35 : 0.5,
+              inseam: latest.inseam_cm ? latest.inseam_cm / 120 : 0.5,
             }
           };
         });
@@ -210,7 +217,7 @@ export const useEngineStore = create<EngineState>((set, get) => ({
   },
 
   saveCheckin: async (data) => {
-    const { userId, token, fetchCheckins, fetchUser, stats } = get();
+    const { userId, token, fetchCheckins, fetchUser } = get();
     if (!userId || !token) return;
     try {
       // 1. Update User Profile for constant frame dimensions if provided

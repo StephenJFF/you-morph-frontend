@@ -1,5 +1,5 @@
 import { useEngineStore } from '../store/engineStore';
-import { Star, Check, Zap, Shield, CreditCard } from 'lucide-react';
+import { Check, Zap, Shield } from 'lucide-react';
 
 const Subscription = () => {
   const { subscriptionStatus, upgradeSubscription } = useEngineStore();
